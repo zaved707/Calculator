@@ -40,6 +40,8 @@ android {
 }
 
 dependencies {
+    implementation (libs.lifecycle.viewmodel.compose)
+    implementation ( "org.mariuszgromada.math:MathParser.org-mXparser:6.1.0")
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.compose.material:material-icons-extended")
     implementation(libs.androidx.core.ktx)

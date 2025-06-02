@@ -1,9 +1,11 @@
 package com.zavedahmad.calculator.ui
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -11,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Backspace
@@ -20,14 +23,34 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.zavedahmad.calculator.data.MainPageViewModel
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.style.TextOverflow
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
-fun MainPage(modifier: Modifier = Modifier) {
+fun MainPage(modifier: Modifier = Modifier, viewModel: MainPageViewModel) {
+    val coroutineScope = rememberCoroutineScope()
+    val scrollState = rememberScrollState()
+    val expression by viewModel.expression.collectAsStateWithLifecycle()
+    LaunchedEffect(expression) {
+        scrollState.scrollTo(scrollState.maxValue)
+    }
+
+
+    val result by viewModel.result.collectAsStateWithLifecycle()
     val numberColor = MaterialTheme.colorScheme.surfaceBright
     val actionsColor = MaterialTheme.colorScheme.secondaryContainer
     val buttonRoundness = 30.dp
@@ -36,16 +59,28 @@ fun MainPage(modifier: Modifier = Modifier) {
     val fontDivider = 3
     val fontDividerNumber = 2
     Column(modifier = modifier) {
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxHeight(0.3f)
                 .fillMaxWidth()
                 .clip(
                     RoundedCornerShape(20.dp)
                 )
-                .background(MaterialTheme.colorScheme.primaryContainer)
+                .background(MaterialTheme.colorScheme.primaryContainer),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.End
 
-        ) {}
+        ) {
+
+            Text(
+                expression, fontSize = 50.sp, style = TextStyle(lineHeight = 50.sp),
+                maxLines = 1, // Ensures single line
+                overflow = TextOverflow.Clip, // Prevents wrapping or ellipsis
+                modifier = Modifier
+                    .horizontalScroll(scrollState) // Enables horizontal scrolling
+            )
+            Text(result)
+        }
         Spacer(modifier = Modifier.height(20.dp))
         Column(verticalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxSize()) {
 
@@ -54,7 +89,8 @@ fun MainPage(modifier: Modifier = Modifier) {
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Button(
-                    onClick = {}, shape = RoundedCornerShape(buttonRoundness),
+                    onClick = { viewModel.updateString("") },
+                    shape = RoundedCornerShape(buttonRoundness),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = MaterialTheme.colorScheme.tertiaryContainer,
                         contentColor = MaterialTheme.colorScheme.onSurface
@@ -71,23 +107,47 @@ fun MainPage(modifier: Modifier = Modifier) {
                     )
                 }
                 Button(
-                    onClick = {}, shape = RoundedCornerShape(buttonRoundness),
+                    onClick = {
+                        viewModel.updateString(expression + "(")
+                    },
+                    shape = RoundedCornerShape(buttonRoundness),
+                    contentPadding = PaddingValues(0.dp),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = actionsColor,
                         contentColor = MaterialTheme.colorScheme.onSurface
                     ),
                     modifier = Modifier
-                        .width(buttonWidth.dp)
+                        .width((buttonWidth / 2).dp)
                         .height(buttonHeight.dp)
                 ) {
                     Text(
-                        "()", modifier = Modifier.fillMaxWidth(), // Text fills button width
+                        "(", modifier = Modifier.fillMaxWidth(), // Text fills button width
                         textAlign = TextAlign.Center,
                         fontSize = (buttonHeight / fontDivider).sp
                     )
                 }
                 Button(
-                    onClick = {}, shape = RoundedCornerShape(buttonRoundness),colors = ButtonDefaults.buttonColors(
+                    onClick = {  viewModel.updateString(expression + ")") },
+                    shape = RoundedCornerShape(buttonRoundness),
+                    contentPadding = PaddingValues(0.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = actionsColor,
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    ),
+                    modifier = Modifier
+                        .width((buttonWidth / 2).dp)
+                        .height(buttonHeight.dp)
+                ) {
+                    Text(
+                        ")", modifier = Modifier.fillMaxWidth(), // Text fills button width
+                        textAlign = TextAlign.Center,
+                        fontSize = (buttonHeight / fontDivider).sp
+                    )
+                }
+                Button(
+                    onClick = { viewModel.updateString(expression + "^")},
+                    shape = RoundedCornerShape(buttonRoundness),
+                    colors = ButtonDefaults.buttonColors(
                         containerColor = actionsColor,
                         contentColor = MaterialTheme.colorScheme.onSurface
                     ),
@@ -102,7 +162,9 @@ fun MainPage(modifier: Modifier = Modifier) {
                     )
                 }
                 Button(
-                    onClick = {}, shape = RoundedCornerShape(buttonRoundness),colors = ButtonDefaults.buttonColors(
+                    onClick = {viewModel.updateString(expression + "/") },
+                    shape = RoundedCornerShape(buttonRoundness),
+                    colors = ButtonDefaults.buttonColors(
                         containerColor = actionsColor,
                         contentColor = MaterialTheme.colorScheme.onSurface
                     ),
@@ -123,7 +185,8 @@ fun MainPage(modifier: Modifier = Modifier) {
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Button(
-                    onClick = {}, shape = RoundedCornerShape(buttonRoundness),
+                    onClick = {viewModel.updateString(expression + "7")},
+                    shape = RoundedCornerShape(buttonRoundness),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = numberColor,
                         contentColor = MaterialTheme.colorScheme.onSurface
@@ -139,7 +202,8 @@ fun MainPage(modifier: Modifier = Modifier) {
                     )
                 }
                 Button(
-                    onClick = {}, shape = RoundedCornerShape(buttonRoundness),
+                    onClick = {viewModel.updateString(expression + "8") },
+                    shape = RoundedCornerShape(buttonRoundness),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = numberColor,
                         contentColor = MaterialTheme.colorScheme.onSurface
@@ -155,7 +219,7 @@ fun MainPage(modifier: Modifier = Modifier) {
                     )
                 }
                 Button(
-                    onClick = {},
+                    onClick = { viewModel.updateString(expression + "9") },
                     shape = RoundedCornerShape(buttonRoundness),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = numberColor,
@@ -172,7 +236,7 @@ fun MainPage(modifier: Modifier = Modifier) {
                     )
                 }
                 Button(
-                    onClick = {},
+                    onClick = { viewModel.updateString(expression + "*") },
                     shape = RoundedCornerShape(buttonRoundness),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = actionsColor,
@@ -195,7 +259,8 @@ fun MainPage(modifier: Modifier = Modifier) {
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Button(
-                    onClick = {}, shape = RoundedCornerShape(buttonRoundness),
+                    onClick = { viewModel.updateString(expression + "4") },
+                    shape = RoundedCornerShape(buttonRoundness),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = numberColor,
                         contentColor = MaterialTheme.colorScheme.onSurface
@@ -211,7 +276,8 @@ fun MainPage(modifier: Modifier = Modifier) {
                     )
                 }
                 Button(
-                    onClick = {}, shape = RoundedCornerShape(buttonRoundness),
+                    onClick = { viewModel.updateString(expression + "5") },
+                    shape = RoundedCornerShape(buttonRoundness),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = numberColor,
                         contentColor = MaterialTheme.colorScheme.onSurface
@@ -227,7 +293,7 @@ fun MainPage(modifier: Modifier = Modifier) {
                     )
                 }
                 Button(
-                    onClick = {},
+                    onClick = { viewModel.updateString(expression + "6") },
                     shape = RoundedCornerShape(buttonRoundness),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = numberColor,
@@ -244,7 +310,9 @@ fun MainPage(modifier: Modifier = Modifier) {
                     )
                 }
                 Button(
-                    onClick = {}, shape = RoundedCornerShape(buttonRoundness),colors = ButtonDefaults.buttonColors(
+                    onClick = { viewModel.updateString(expression + "-") },
+                    shape = RoundedCornerShape(buttonRoundness),
+                    colors = ButtonDefaults.buttonColors(
                         containerColor = actionsColor,
                         contentColor = MaterialTheme.colorScheme.onSurface
                     ),
@@ -265,7 +333,8 @@ fun MainPage(modifier: Modifier = Modifier) {
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Button(
-                    onClick = {}, shape = RoundedCornerShape(buttonRoundness),
+                    onClick = { viewModel.updateString(expression + "1") },
+                    shape = RoundedCornerShape(buttonRoundness),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = numberColor,
                         contentColor = MaterialTheme.colorScheme.onSurface
@@ -281,7 +350,8 @@ fun MainPage(modifier: Modifier = Modifier) {
                     )
                 }
                 Button(
-                    onClick = {}, shape = RoundedCornerShape(buttonRoundness),
+                    onClick = { viewModel.updateString(expression + "2") },
+                    shape = RoundedCornerShape(buttonRoundness),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = numberColor,
                         contentColor = MaterialTheme.colorScheme.onSurface
@@ -297,7 +367,7 @@ fun MainPage(modifier: Modifier = Modifier) {
                     )
                 }
                 Button(
-                    onClick = {},
+                    onClick = { viewModel.updateString(expression + "3") },
                     shape = RoundedCornerShape(buttonRoundness),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = numberColor,
@@ -314,7 +384,9 @@ fun MainPage(modifier: Modifier = Modifier) {
                     )
                 }
                 Button(
-                    onClick = {}, shape = RoundedCornerShape(buttonRoundness),colors = ButtonDefaults.buttonColors(
+                    onClick = { viewModel.updateString(expression + "+") },
+                    shape = RoundedCornerShape(buttonRoundness),
+                    colors = ButtonDefaults.buttonColors(
                         containerColor = actionsColor,
                         contentColor = MaterialTheme.colorScheme.onSurface
                     ),
@@ -335,7 +407,8 @@ fun MainPage(modifier: Modifier = Modifier) {
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Button(
-                    onClick = {}, shape = RoundedCornerShape(buttonRoundness),
+                    onClick = { viewModel.updateString(expression + "0") },
+                    shape = RoundedCornerShape(buttonRoundness),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = numberColor,
                         contentColor = MaterialTheme.colorScheme.onSurface
@@ -351,7 +424,8 @@ fun MainPage(modifier: Modifier = Modifier) {
                     )
                 }
                 Button(
-                    onClick = {}, shape = RoundedCornerShape(buttonRoundness),
+                    onClick = { viewModel.updateString(expression + ".") },
+                    shape = RoundedCornerShape(buttonRoundness),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = numberColor,
                         contentColor = MaterialTheme.colorScheme.onSurface
@@ -367,7 +441,7 @@ fun MainPage(modifier: Modifier = Modifier) {
                     )
                 }
                 Button(
-                    onClick = {},
+                    onClick = { viewModel.backspace() },
                     shape = RoundedCornerShape(buttonRoundness),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = numberColor,
@@ -377,10 +451,16 @@ fun MainPage(modifier: Modifier = Modifier) {
                         .width(buttonWidth.dp)
                         .height(buttonHeight.dp)
                 ) {
-                    Icon(Icons.Outlined.Backspace, contentDescription = "fuck this shit", modifier = Modifier.fillMaxSize(0.8f))
+                    Icon(
+                        Icons.Outlined.Backspace,
+                        contentDescription = "fuck this shit",
+                        modifier = Modifier.fillMaxSize(0.8f)
+                    )
                 }
                 Button(
-                    onClick = {}, shape = RoundedCornerShape(buttonRoundness),colors = ButtonDefaults.buttonColors(
+                    onClick = { viewModel.equal() },
+                    shape = RoundedCornerShape(buttonRoundness),
+                    colors = ButtonDefaults.buttonColors(
                         containerColor = actionsColor,
                         contentColor = MaterialTheme.colorScheme.onSurface
                     ),
