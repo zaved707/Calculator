@@ -1,2 +1,3 @@
-TODO:  add https://github.com/Keelar/ExprK/tree/master library
-TODO: add history database and maybe bottomsheet for history viewing
+todo:{ 1. add light theme toggle
+        2. add new thing
+        3. add a cursor for inserting wherever i want}
