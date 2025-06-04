@@ -12,15 +12,22 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.Backspace
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.outlined.Backspace
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -32,24 +39,29 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.zavedahmad.calculator.data.MainPageViewModel
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextOverflow
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.rememberModalBottomSheetState
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainPage(modifier: Modifier = Modifier, viewModel: MainPageViewModel) {
-    val coroutineScope = rememberCoroutineScope()
+
     val scrollState = rememberScrollState()
     val expression by viewModel.expression.collectAsStateWithLifecycle()
     LaunchedEffect(expression) {
         scrollState.scrollTo(scrollState.maxValue)
     }
-
-
+    val historyList by viewModel.historyList.collectAsStateWithLifecycle()
+    var showBottomSheet by remember { mutableStateOf(false) }
     val result by viewModel.result.collectAsStateWithLifecycle()
     val numberColor = MaterialTheme.colorScheme.surfaceBright
     val actionsColor = MaterialTheme.colorScheme.secondaryContainer
@@ -58,6 +70,22 @@ fun MainPage(modifier: Modifier = Modifier, viewModel: MainPageViewModel) {
     val buttonHeight = 90
     val fontDivider = 3
     val fontDividerNumber = 2
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, )
+
+    if (showBottomSheet) {
+        ModalBottomSheet(
+            
+            onDismissRequest = { showBottomSheet = false },
+            scrimColor = Color.Transparent
+        ) { Column(Modifier.fillMaxHeight(0.65f).padding(10.dp).fillMaxWidth()) {
+            Text("History", textAlign = TextAlign.Center,modifier= Modifier.fillMaxWidth(), fontSize = 25.sp)
+            Spacer(modifier = Modifier.width(20.dp))
+            HorizontalDivider()
+            Spacer(modifier = Modifier.width(30.dp))
+
+            LazyColumn (modifier = Modifier.fillMaxWidth()){ items(historyList) { item -> Text(item.expression, fontSize = 30.sp)
+            Text(item.answer, fontSize = 20.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)} } } }
+    }
     Column(modifier = modifier) {
         Column(
             modifier = Modifier
@@ -71,6 +99,12 @@ fun MainPage(modifier: Modifier = Modifier, viewModel: MainPageViewModel) {
             horizontalAlignment = Alignment.End
 
         ) {
+            IconButton(onClick = { showBottomSheet = true }) {
+                Icon(
+                    Icons.Default.History,
+                    contentDescription = "history"
+                )
+            }
 
             Text(
                 expression, fontSize = 50.sp, style = TextStyle(lineHeight = 50.sp),
@@ -80,6 +114,7 @@ fun MainPage(modifier: Modifier = Modifier, viewModel: MainPageViewModel) {
                     .horizontalScroll(scrollState) // Enables horizontal scrolling
             )
             Text(result)
+
         }
         Spacer(modifier = Modifier.height(20.dp))
         Column(verticalArrangement = Arrangement.SpaceEvenly, modifier = Modifier.fillMaxSize()) {
@@ -127,7 +162,7 @@ fun MainPage(modifier: Modifier = Modifier, viewModel: MainPageViewModel) {
                     )
                 }
                 Button(
-                    onClick = {  viewModel.updateString(expression + ")") },
+                    onClick = { viewModel.updateString(expression + ")") },
                     shape = RoundedCornerShape(buttonRoundness),
                     contentPadding = PaddingValues(0.dp),
                     colors = ButtonDefaults.buttonColors(
@@ -145,7 +180,7 @@ fun MainPage(modifier: Modifier = Modifier, viewModel: MainPageViewModel) {
                     )
                 }
                 Button(
-                    onClick = { viewModel.updateString(expression + "^")},
+                    onClick = { viewModel.updateString(expression + "^") },
                     shape = RoundedCornerShape(buttonRoundness),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = actionsColor,
@@ -162,7 +197,7 @@ fun MainPage(modifier: Modifier = Modifier, viewModel: MainPageViewModel) {
                     )
                 }
                 Button(
-                    onClick = {viewModel.updateString(expression + "/") },
+                    onClick = { viewModel.updateString(expression + "/") },
                     shape = RoundedCornerShape(buttonRoundness),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = actionsColor,
@@ -185,7 +220,7 @@ fun MainPage(modifier: Modifier = Modifier, viewModel: MainPageViewModel) {
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 Button(
-                    onClick = {viewModel.updateString(expression + "7")},
+                    onClick = { viewModel.updateString(expression + "7") },
                     shape = RoundedCornerShape(buttonRoundness),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = numberColor,
@@ -202,7 +237,7 @@ fun MainPage(modifier: Modifier = Modifier, viewModel: MainPageViewModel) {
                     )
                 }
                 Button(
-                    onClick = {viewModel.updateString(expression + "8") },
+                    onClick = { viewModel.updateString(expression + "8") },
                     shape = RoundedCornerShape(buttonRoundness),
                     colors = ButtonDefaults.buttonColors(
                         containerColor = numberColor,
@@ -452,7 +487,7 @@ fun MainPage(modifier: Modifier = Modifier, viewModel: MainPageViewModel) {
                         .height(buttonHeight.dp)
                 ) {
                     Icon(
-                        Icons.Outlined.Backspace,
+                        Icons.AutoMirrored.Outlined.Backspace,
                         contentDescription = "fuck this shit",
                         modifier = Modifier.fillMaxSize(0.8f)
                     )

@@ -1,1 +1,2 @@
-TODO:  add https://github.com/Keelar/ExprK/tree/master library 
+TODO:  add https://github.com/Keelar/ExprK/tree/master library
+TODO: add history database and maybe bottomsheet for history viewing
