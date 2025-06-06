@@ -5,8 +5,8 @@ import androidx.room.PrimaryKey
 
 @Entity(tableName = "HistoryTable")
 data class HistoryEntity (
-    @PrimaryKey(autoGenerate = true)
-    val key:Int= 0,
+    @PrimaryKey(autoGenerate = false)
+    val key: Long,
     val expression: String,
     val answer : String
 

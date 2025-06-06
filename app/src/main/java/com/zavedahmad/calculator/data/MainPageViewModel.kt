@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.mariuszgromada.math.mxparser.Expression
+import java.time.Instant
 import javax.inject.Inject
 
 @HiltViewModel
@@ -47,6 +48,10 @@ class MainPageViewModel @Inject constructor(val dao: HistoryDAO) : ViewModel() {
 
     }
 
+    fun deleteItemByKey(key: Long){
+        viewModelScope.launch { dao.deleteHistoryByKey(key) }
+    }
+
     fun updateString(addValue: String) {
 
         _expression.value = addValue
@@ -61,6 +66,7 @@ class MainPageViewModel @Inject constructor(val dao: HistoryDAO) : ViewModel() {
             withContext(Dispatchers.Default) {
                 dao.addHistory(
                     HistoryEntity(
+                        key =  Instant.now().toEpochMilli(),
                         expression = backupExpression,
                         answer = _result.value
                     )
