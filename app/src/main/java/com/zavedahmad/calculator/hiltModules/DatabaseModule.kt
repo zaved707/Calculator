@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.zavedahmad.calculator.data.database.HistoryDAO
 import com.zavedahmad.calculator.data.database.HistoryDatabase
+import com.zavedahmad.calculator.data.database.PreferencesDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -16,14 +17,19 @@ import javax.inject.Singleton
 object DatabaseModule {
     @Provides
     @Singleton
-    fun ProvideHistoryDatabase(@ApplicationContext Context: Context): HistoryDatabase
+    fun provideHistoryDatabase(@ApplicationContext context: Context): HistoryDatabase
     {
-        return Room.databaseBuilder(context = Context, HistoryDatabase::class.java, "history_database").build()
+        return Room.databaseBuilder(context = context, HistoryDatabase::class.java, "history_database").build()
     }
 
     @Provides
-    fun ProvideDao (historyDatabase: HistoryDatabase): HistoryDAO{
+    fun provideDao (historyDatabase: HistoryDatabase): HistoryDAO{
         return historyDatabase.historyDAO()
+    }
+
+    @Provides
+    fun providePreferencesDao (historyDatabase: HistoryDatabase): PreferencesDao{
+        return historyDatabase.preferencesDao()
     }
 
 }

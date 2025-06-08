@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -18,11 +19,15 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,11 +41,15 @@ import kotlinx.coroutines.launch
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun DisplayScreen(scaffoldState: BottomSheetScaffoldState, viewModel: MainPageViewModel){
+fun DisplayScreen(scaffoldState: BottomSheetScaffoldState, viewModel: MainPageViewModel) {
     val result by viewModel.result.collectAsStateWithLifecycle()
+    val theme by viewModel.theme.collectAsStateWithLifecycle()
     val scrollState = rememberScrollState()
     val expression by viewModel.expression.collectAsStateWithLifecycle()
-    val coroutineScope= rememberCoroutineScope()
+    val coroutineScope = rememberCoroutineScope()
+    val themeBoolean by remember(theme) {
+        mutableStateOf(theme == "Light")
+    }
     LaunchedEffect(expression) {
         scrollState.scrollTo(scrollState.maxValue)
     }
@@ -56,13 +65,25 @@ fun DisplayScreen(scaffoldState: BottomSheetScaffoldState, viewModel: MainPageVi
         horizontalAlignment = Alignment.End
 
     ) {
-        IconButton(onClick = { coroutineScope.launch { scaffoldState.bottomSheetState.expand() } }) {
-            Icon(
-                Icons.Default.History,
-                contentDescription = "history",
-                Modifier.size(50.dp)
-            )
+        Row {
+            Text(theme)
+            Switch(checked = themeBoolean, onCheckedChange = { isChecked ->
+                if (isChecked) {
+                    viewModel.setThemePreferences("Light")
+                }else{
+                    viewModel.setThemePreferences("Dark")
+                }
+
+            })
+            IconButton(onClick = { coroutineScope.launch { scaffoldState.bottomSheetState.expand() } }) {
+                Icon(
+                    Icons.Default.History,
+                    contentDescription = "history",
+                    Modifier.size(50.dp)
+                )
+            }
         }
+
         Spacer(Modifier.height(20.dp))
 
         Text(
