@@ -19,15 +19,11 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,13 +39,12 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 fun DisplayScreen(scaffoldState: BottomSheetScaffoldState, viewModel: MainPageViewModel) {
     val result by viewModel.result.collectAsStateWithLifecycle()
-    val theme by viewModel.theme.collectAsStateWithLifecycle()
+
     val scrollState = rememberScrollState()
     val expression by viewModel.expression.collectAsStateWithLifecycle()
     val coroutineScope = rememberCoroutineScope()
-    val themeBoolean by remember(theme) {
-        mutableStateOf(theme == "Light")
-    }
+
+
     LaunchedEffect(expression) {
         scrollState.scrollTo(scrollState.maxValue)
     }
@@ -65,16 +60,12 @@ fun DisplayScreen(scaffoldState: BottomSheetScaffoldState, viewModel: MainPageVi
         horizontalAlignment = Alignment.End
 
     ) {
-        Row {
-            Text(theme)
-            Switch(checked = themeBoolean, onCheckedChange = { isChecked ->
-                if (isChecked) {
-                    viewModel.setThemePreferences("Light")
-                }else{
-                    viewModel.setThemePreferences("Dark")
+
+        Row (modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween){
+            Row {
+            DropDownMenuMain(viewModel)
                 }
 
-            })
             IconButton(onClick = { coroutineScope.launch { scaffoldState.bottomSheetState.expand() } }) {
                 Icon(
                     Icons.Default.History,

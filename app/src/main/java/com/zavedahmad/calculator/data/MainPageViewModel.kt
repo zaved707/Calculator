@@ -43,7 +43,7 @@ class MainPageViewModel @Inject constructor(
             preferencesDao.getPreferenceByKey("theme")
                 .collect { preference ->
                     if (preference == null) {
-                        preferencesDao.updatePreference(PreferencesEntity("theme", "System"))
+                        preferencesDao.updatePreference(PreferencesEntity("theme", "system"))
                     }
                     else {
                         _theme.value = preference.value
